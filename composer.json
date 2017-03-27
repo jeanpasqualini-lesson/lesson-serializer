@@ -17,7 +17,7 @@
     }
   },
   "require": {
-    "symfony/serializer": "2.7.x-dev",
-    "symfony/yaml": "2.7.x-dev"
+    "symfony/serializer": "3.2.*",
+    "symfony/yaml": "3.2.*"
   }
 }
