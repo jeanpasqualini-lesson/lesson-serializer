@@ -8,10 +8,7 @@ use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
-use Symfony\Component\Serializer\Normalizer\DataUriNormalizer;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Annotation;
 
@@ -96,44 +93,48 @@ class AnnotationSerializerTest extends \PHPUnit_Framework_TestCase
         ], $serializer->normalize($object));
     }
 
-    public function testDataUriNormalizer()
+    public function testMaxDepth()
     {
-        $object = new \SplFileInfo(__DIR__ . '/../autoload.php');
-
-        $serializer = new Serializer([
-            new DataUriNormalizer()
-        ], []);
-
-        $this->assertEquals(
-            'data:application/octet-stream;base64,' . base64_encode(file_get_contents(__DIR__ . '/../autoload.php')),
-            $serializer->normalize($object)
-        );
-    }
-
-    public function testDateTimeNormalizer()
-    {
-        $object = new \DateTime('2016-01-01');
-
-        $serializer = new Serializer([
-            new DateTimeNormalizer()
-        ], []);
-
-        $this->assertEquals(
-            '2016-01-01T00:00:00+01:00',
-            $serializer->normalize($object)
-        );
-    }
-
-    public function testPropertyNormalizer()
-    {
-        $object = new Class {
-            private $color = 'red';
+        $factoryObject = function() {
+            return new Class {
+                public $color = 'red';
+                /** @Annotation\MaxDepth(2) */
+                public $children;
+            };
         };
 
-        $serializer = new Serializer([
-            new PropertyNormalizer()
-        ], []);
+        $object = $factoryObject();
+        $object->children = $factoryObject();
+        $object->children->children = $factoryObject();
+        $object->children->children->children = $factoryObject();
 
-        $this->assertEquals(['color' => 'red'], $serializer->normalize($object));
+        $this->assertEquals([
+            'color' => 'red',
+            'children' => [
+                'color' => 'red',
+                'children' => [
+                    'color' => 'red',
+                ]
+            ]
+        ], $this->serializer->normalize($object, null, array('enable_max_depth' => true)));
+    }
+
+    public function testHandlingArray()
+    {
+        $data = [
+            'first' => $this->factoryObject(),
+            'second' => $this->factoryObject(),
+        ];
+
+        $this->assertEquals([
+            'first' => [
+                'color' => 'red',
+                'size' => 'xl'
+            ],
+            'second' => [
+                'color' => 'red',
+                'size' => 'xl'
+            ],
+        ], $this->serializer->normalize($data));
     }
 }
