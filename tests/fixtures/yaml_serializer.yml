@@ -1,0 +1,6 @@
+anonymous:
+  attributes:
+    color:
+      groups: ['color']
+    size:
+      groups: ['size']
