@@ -2,12 +2,10 @@
 
 namespace Test;
 
-use Doctrine\Common\Annotations\AnnotationReader;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\ClassMetadataInterface;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
-use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
-use Symfony\Component\Serializer\Mapping\Loader\YamlFileLoader;
+use Symfony\Component\Serializer\Mapping\Loader\XmlFileLoader;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -15,7 +13,7 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Annotation;
 use Symfony\Component\Serializer\Mapping\ClassMetadata;
 
-class YamlSerializerTest extends \PHPUnit_Framework_TestCase
+class XmlSerializerTest extends \PHPUnit_Framework_TestCase
 {
     /** @var Serializer */
     protected $serializer;
@@ -26,7 +24,7 @@ class YamlSerializerTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $classMetadataFactory = new ClassMetadataFactory(
-            $this->factoryYamlFileLoader(__DIR__ . '/fixtures/yaml_serializer.yml')
+            $this->factoryXmlFileLoader(__DIR__ . '/fixtures/xml_serializer.xml')
         );
         $nameConveter = new CamelCaseToSnakeCaseNameConverter();
         $normalizer = $this->normalizer = new ObjectNormalizer($classMetadataFactory, $nameConveter);
@@ -35,9 +33,9 @@ class YamlSerializerTest extends \PHPUnit_Framework_TestCase
         $this->serializer = new Serializer([$normalizer], [$encoder]);
     }
 
-    private function factoryYamlFileLoader($config)
+    private function factoryXmlFileLoader($config)
     {
-        $yamlFileLoader = new Class($config) extends YamlFileLoader {
+        $yamlFileLoader = new Class($config) extends XmlFileLoader {
             private $object;
 
             public function setObject($object)

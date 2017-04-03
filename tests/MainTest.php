@@ -9,6 +9,7 @@ use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 class MainTest extends \PHPUnit_Framework_TestCase
@@ -123,5 +124,24 @@ class MainTest extends \PHPUnit_Framework_TestCase
         ];
 
         $this->assertEquals($object, $this->serializer->denormalize($data, get_class($object)));
+    }
+
+    public function testPopulateAlreadyExistObject()
+    {
+        $this->serializer = new Serializer([new PropertyNormalizer()], []);
+
+        $object = new Class {
+            public $color;
+
+            public $size;
+        };
+        $object->color = 'red';
+
+        $object = $this->serializer->denormalize(['size' => 'xl'], get_class($object), null, [
+            'object_to_populate' => $object
+        ]);
+
+        $this->assertEquals('red', $object->color);
+        $this->assertEquals('xl', $object->size);
     }
 }
